@@ -1281,7 +1281,8 @@ run(function()
 		Name = 'Use killaura target'
 	})
 	StrafeIncrease = AimAssist:CreateToggle({Name = 'Strafe increase'})
-end)	
+end)
+	
 run(function()
 	local old
 	
@@ -2526,56 +2527,74 @@ run(function()
 		Darker = true,
 		Visible = false
 	})
-RangeVisualizer = Killaura:CreateToggle({
-    Name = 'Range Visualizer',
-    Function = function(callback)
-        if callback then
-            local visual = Instance.new('Part')
-            visual.Shape = Enum.PartType.Cylinder
-            visual.Size = Vector3.new(1, SwingRange.Value * 2, SwingRange.Value * 2)
-            visual.Position = entitylib.character.RootPart.Position
-            visual.Anchored = true
-            visual.CanCollide = false
-            visual.Transparency = 0.7
-            visual.Color = Color3.fromRGB(147, 112, 219) -- Default purple from Velocity screenshot
-            visual.Parent = gameCamera
-            task.spawn(function()
-                while Killaura.Enabled and RangeVisualizer.Enabled do
-                    visual.Position = entitylib.character.RootPart.Position
-                    visual.Size = Vector3.new(1, SwingRange.Value * 2, SwingRange.Value * 2)
-                    visual.Color = Color3.fromRGB(RangeColor.Hue * 255, RangeColor.Sat * 255, RangeColor.Value * 255)
-                    task.wait(1 / UpdateRate.Value)
-                end
-                visual:Destroy()
-            end)
-        else
-            for _, v in gameCamera:GetChildren() do
-                if v.Name == 'RangeVisual' then v:Destroy() end
-            end
-        end
-    end,
-    Tooltip = 'Displays a visual representation of the KillAura range'
+	local GuiLibrary = shared.GuiLibrary -- Assuming GuiLibrary is available
+local gameCamera = game:GetService("Workspace").CurrentCamera
+local entityLibrary = shared.entityLibrary -- Assuming entityLibrary is available
+
+-- Killaura range circle toggle
+local Killaura = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
+    Name = "Killaura",
+    Function = function(callback) end -- Placeholder, assumes Killaura is already defined
 })
 
-RangeColor = Killaura:CreateColorSlider({
-    Name = 'Range Color',
-    Function = function(hue, sat, val)
-        for _, v in gameCamera:GetChildren() do
-            if v.Name == 'RangeVisual' then
-                v.Color = Color3.fromRGB(hue * 255, sat * 255, val * 255)
+local killaurarangecircle = Killaura.CreateToggle({
+    Name = "Range Visualizer",
+    Function = function(callback)
+        if callback then
+            killaurarangecirclepart = Instance.new("MeshPart")
+            killaurarangecirclepart.MeshId = "rbxassetid://3726303797"
+            killaurarangecirclepart.Color = Color3.fromHSV(killauracolor.Hue, killauracolor.Sat, killauracolor.Value)
+            killaurarangecirclepart.CanCollide = false
+            killaurarangecirclepart.Anchored = true
+            killaurarangecirclepart.Material = Enum.Material.Neon
+            killaurarangecirclepart.Size = Vector3.new(killaurarange.Value * 0.7, 0.01, killaurarange.Value * 0.7)
+            killaurarangecirclepart.Parent = gameCamera
+
+            -- Update position and size on heartbeat
+            game:GetService("RunService").Heartbeat:Connect(function()
+                if entityLibrary and entityLibrary.isAlive then
+                    local Root = entityLibrary.character.HumanoidRootPart
+                    if Root then
+                        killaurarangecirclepart.Position = Root.Position - Vector3.new(0, entityLibrary.character.Humanoid.HipHeight, 0)
+                        killaurarangecirclepart.Size = Vector3.new(killaurarange.Value * 0.7, 0.01, killaurarange.Value * 0.7)
+                    end
+                end
+            end)
+        else
+            if killaurarangecirclepart then
+                killaurarangecirclepart:Destroy()
+                killaurarangecirclepart = nil
             end
         end
     end,
-    DefaultHue = 0.7, -- Purple hue
-    DefaultSat = 0.5,
-    DefaultValue = 0.5,
-    Darker = true,
-    Visible = false
+    Default = false
 })
-RangeVisualizer:CreateToggle({
-    Name = 'Show Color',
-    Function = function(callback)
-        RangeColor.Object.Visible =
+local killaurarange = Killaura.CreateSlider({
+    Name = "Attack range",
+    Min = 1,
+    Max = 18,
+    Function = function(val)
+        if killaurarangecirclepart then
+            killaurarangecirclepart.Size = Vector3.new(val * 0.7, 0.01, val * 0.7)
+        end
+    end,
+    Default = 14
+})
+
+
+local killauracolor = Killaura.CreateColorSlider({
+    Name = "Target Color",
+    Function = function(hue, sat, val)
+        if killaurarangecirclepart then
+            killaurarangecirclepart.Color = Color3.fromHSV(hue, sat, val)
+        end
+    end,
+    Default = 0.44
+})
+
+
+local killaurarangecirclepart = nil
+local killaurarange = {Value = 14} 
 	Limit = Killaura:CreateToggle({
 		Name = 'Limit to items',
 		Function = function(callback)
