@@ -2527,74 +2527,6 @@ run(function()
 		Darker = true,
 		Visible = false
 	})
-	local GuiLibrary = shared.GuiLibrary -- Assuming GuiLibrary is available
-local gameCamera = game:GetService("Workspace").CurrentCamera
-local entityLibrary = shared.entityLibrary -- Assuming entityLibrary is available
-
--- Killaura range circle toggle
-local Killaura = GuiLibrary.ObjectsThatCanBeSaved.BlatantWindow.Api.CreateOptionsButton({
-    Name = "Killaura",
-    Function = function(callback) end -- Placeholder, assumes Killaura is already defined
-})
-
-local killaurarangecircle = Killaura.CreateToggle({
-    Name = "Range Visualizer",
-    Function = function(callback)
-        if callback then
-            killaurarangecirclepart = Instance.new("MeshPart")
-            killaurarangecirclepart.MeshId = "rbxassetid://3726303797"
-            killaurarangecirclepart.Color = Color3.fromHSV(killauracolor.Hue, killauracolor.Sat, killauracolor.Value)
-            killaurarangecirclepart.CanCollide = false
-            killaurarangecirclepart.Anchored = true
-            killaurarangecirclepart.Material = Enum.Material.Neon
-            killaurarangecirclepart.Size = Vector3.new(killaurarange.Value * 0.7, 0.01, killaurarange.Value * 0.7)
-            killaurarangecirclepart.Parent = gameCamera
-
-            -- Update position and size on heartbeat
-            game:GetService("RunService").Heartbeat:Connect(function()
-                if entityLibrary and entityLibrary.isAlive then
-                    local Root = entityLibrary.character.HumanoidRootPart
-                    if Root then
-                        killaurarangecirclepart.Position = Root.Position - Vector3.new(0, entityLibrary.character.Humanoid.HipHeight, 0)
-                        killaurarangecirclepart.Size = Vector3.new(killaurarange.Value * 0.7, 0.01, killaurarange.Value * 0.7)
-                    end
-                end
-            end)
-        else
-            if killaurarangecirclepart then
-                killaurarangecirclepart:Destroy()
-                killaurarangecirclepart = nil
-            end
-        end
-    end,
-    Default = false
-})
-local killaurarange = Killaura.CreateSlider({
-    Name = "Attack range",
-    Min = 1,
-    Max = 18,
-    Function = function(val)
-        if killaurarangecirclepart then
-            killaurarangecirclepart.Size = Vector3.new(val * 0.7, 0.01, val * 0.7)
-        end
-    end,
-    Default = 14
-})
-
-
-local killauracolor = Killaura.CreateColorSlider({
-    Name = "Target Color",
-    Function = function(hue, sat, val)
-        if killaurarangecirclepart then
-            killaurarangecirclepart.Color = Color3.fromHSV(hue, sat, val)
-        end
-    end,
-    Default = 0.44
-})
-
-
-local killaurarangecirclepart = nil
-local killaurarange = {Value = 14} 
 	Limit = Killaura:CreateToggle({
 		Name = 'Limit to items',
 		Function = function(callback)
@@ -5275,6 +5207,34 @@ run(function()
 		end,
 		Tooltip = 'Lets you stay ingame without getting kicked'
 	})
+end)
+run(function()
+    local InfJump
+
+    InfJump = vape.Categories.World:CreateModule({
+        Name = 'Inf Jump',
+        Function = function(callback)
+            if callback then
+                InfJump.Connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+                    if gameProcessed then return end
+                    if input.KeyCode == Enum.KeyCode.Space then
+                        local player = game.Players.LocalPlayer
+                        local character = player.Character
+                        if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
+                            character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+                    end
+                end)
+            else
+                -- Disconnect when turned off
+                if InfJump.Connection then
+                    InfJump.Connection:Disconnect()
+                    InfJump.Connection = nil
+                end
+            end
+        end,
+        Tooltip = 'Allows you to jump infinitely by pressing spacebar multiple times'
+    })
 end)
 	
 run(function()
