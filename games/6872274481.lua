@@ -1282,6 +1282,36 @@ run(function()
 	})
 	StrafeIncrease = AimAssist:CreateToggle({Name = 'Strafe increase'})
 end)
+	killaurarangecircle = Killaura:CreateToggle({
+        	Name = "Range Visualizer",
+        	Function = function(callback: boolean): void
+            		if callback then 
+                		killaurarangecirclepart = Instance.new("MeshPart")
+		                killaurarangecirclepart.MeshId = "rbxassetid://3726303797"
+		                killaurarangecirclepart.Color = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor.Value)
+		                killaurarangecirclepart.CanCollide = false
+		                killaurarangecirclepart.Anchored = true
+		                killaurarangecirclepart.Material = Enum.Material.Neon
+		                killaurarangecirclepart.Size = Vector3.new(AttackRange.Value * 0.7, 0.01, AttackRange.Value * 0.7)
+		                if Killaura.Enabled then 
+		                    	killaurarangecirclepart.Parent = gameCamera
+		                end
+		                bedwars.QueryUtil:setQueryIgnored(killaurarangecirclepart, true)
+            		else
+		                if killaurarangecirclepart then 
+		                    	killaurarangecirclepart:Destroy()
+		                    	killaurarangecirclepart = nil
+		                end
+            		end
+        	end
+    	})
+    	killauracolor = Killaura:CreateColorSlider({
+         	Name = 'colour',
+         	Darker = true,
+		DefaultHue = 0.6,
+		DefaultOpacity = 0.5,
+		Visible = true
+	})
 	
 run(function()
 	local old
