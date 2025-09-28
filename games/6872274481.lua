@@ -1281,38 +1281,7 @@ run(function()
 		Name = 'Use killaura target'
 	})
 	StrafeIncrease = AimAssist:CreateToggle({Name = 'Strafe increase'})
-end)
-	killaurarangecircle = Killaura:CreateToggle({
-        	Name = "Range Visualizer",
-        	Function = function(callback: boolean): void
-            		if callback then 
-                		killaurarangecirclepart = Instance.new("MeshPart")
-		                killaurarangecirclepart.MeshId = "rbxassetid://3726303797"
-		                killaurarangecirclepart.Color = Color3.fromHSV(killauracolor["Hue"], killauracolor["Sat"], killauracolor.Value)
-		                killaurarangecirclepart.CanCollide = false
-		                killaurarangecirclepart.Anchored = true
-		                killaurarangecirclepart.Material = Enum.Material.Neon
-		                killaurarangecirclepart.Size = Vector3.new(AttackRange.Value * 0.7, 0.01, AttackRange.Value * 0.7)
-		                if Killaura.Enabled then 
-		                    	killaurarangecirclepart.Parent = gameCamera
-		                end
-		                bedwars.QueryUtil:setQueryIgnored(killaurarangecirclepart, true)
-            		else
-		                if killaurarangecirclepart then 
-		                    	killaurarangecirclepart:Destroy()
-		                    	killaurarangecirclepart = nil
-		                end
-            		end
-        	end
-    	})
-    	killauracolor = Killaura:CreateColorSlider({
-         	Name = 'colour',
-         	Darker = true,
-		DefaultHue = 0.6,
-		DefaultOpacity = 0.5,
-		Visible = true
-	})
-	
+end)	
 run(function()
 	local old
 	
@@ -2557,6 +2526,56 @@ run(function()
 		Darker = true,
 		Visible = false
 	})
+RangeVisualizer = Killaura:CreateToggle({
+    Name = 'Range Visualizer',
+    Function = function(callback)
+        if callback then
+            local visual = Instance.new('Part')
+            visual.Shape = Enum.PartType.Cylinder
+            visual.Size = Vector3.new(1, SwingRange.Value * 2, SwingRange.Value * 2)
+            visual.Position = entitylib.character.RootPart.Position
+            visual.Anchored = true
+            visual.CanCollide = false
+            visual.Transparency = 0.7
+            visual.Color = Color3.fromRGB(147, 112, 219) -- Default purple from Velocity screenshot
+            visual.Parent = gameCamera
+            task.spawn(function()
+                while Killaura.Enabled and RangeVisualizer.Enabled do
+                    visual.Position = entitylib.character.RootPart.Position
+                    visual.Size = Vector3.new(1, SwingRange.Value * 2, SwingRange.Value * 2)
+                    visual.Color = Color3.fromRGB(RangeColor.Hue * 255, RangeColor.Sat * 255, RangeColor.Value * 255)
+                    task.wait(1 / UpdateRate.Value)
+                end
+                visual:Destroy()
+            end)
+        else
+            for _, v in gameCamera:GetChildren() do
+                if v.Name == 'RangeVisual' then v:Destroy() end
+            end
+        end
+    end,
+    Tooltip = 'Displays a visual representation of the KillAura range'
+})
+
+RangeColor = Killaura:CreateColorSlider({
+    Name = 'Range Color',
+    Function = function(hue, sat, val)
+        for _, v in gameCamera:GetChildren() do
+            if v.Name == 'RangeVisual' then
+                v.Color = Color3.fromRGB(hue * 255, sat * 255, val * 255)
+            end
+        end
+    end,
+    DefaultHue = 0.7, -- Purple hue
+    DefaultSat = 0.5,
+    DefaultValue = 0.5,
+    Darker = true,
+    Visible = false
+})
+RangeVisualizer:CreateToggle({
+    Name = 'Show Color',
+    Function = function(callback)
+        RangeColor.Object.Visible =
 	Limit = Killaura:CreateToggle({
 		Name = 'Limit to items',
 		Function = function(callback)
